@@ -76,27 +76,22 @@ MySQL.init(auth, List.of(
 
 ### 2\. Criando a Classe de Modelo
 
-Sua classe de modelo deve estender `ActiveRecord<T>`. **Todos os campos que você deseja persistir devem ser anotados com `@Column` ou `@Id`**.
+Sua classe de modelo deve estender `ActiveRecord<T>`. **Todos os campos que você deseja persistir devem ser anotados com `@Column` ou `@Id`**. A classe também precisa de um construtor público sem argumentos.
 
 ```java
 // models/Player.java
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import mysql.annotations.*;
 import mysql.core.ActiveRecord;
+import java.time.Instant;
 import java.util.UUID;
 
-@Getter
-@Setter
-@NoArgsConstructor
 @Table("players") // Define o nome da tabela como 'players'
 public class Player extends ActiveRecord<Player> {
 
     @Id // Marca este campo como a chave primária auto-incrementável (coluna 'id')
     private int id;
 
-    @Column("player_uuid") // Mapeia o campo para a coluna 'player_uuid' e a torna única
+    @Column("player_uuid") // Mapeia o campo para a coluna 'player_uuid'
     private UUID uuid;
 
     @Column("player_name") // Mapeia para a coluna 'player_name'
@@ -109,18 +104,38 @@ public class Player extends ActiveRecord<Player> {
     @CanBeNull // Permite que esta coluna seja nula no banco de dados
     private Instant lastSeen;
 
+    // Construtor sem argumentos (obrigatório pelo aMySQL)
+    public Player() {}
+
+    // Construtor para facilitar a criação de novos objetos
     public Player(UUID uuid, String username) {
         this.uuid = uuid;
         this.username = username;
         this.level = 1;
         this.lastSeen = Instant.now();
     }
+
+    // --- Getters ---
+    public int getId() { return id; }
+    public UUID getUuid() { return uuid; }
+    public String getUsername() { return username; }
+    public int getLevel() { return level; }
+    public Instant getLastSeen() { return lastSeen; }
+
+    // --- Setters ---
+    public void setId(int id) { this.id = id; }
+    public void setUuid(UUID uuid) { this.uuid = uuid; }
+    public void setUsername(String username) { this.username = username; }
+    public void setLevel(int level) { this.level = level; }
+    public void setLastSeen(Instant lastSeen) { this.lastSeen = lastSeen; }
 }
 ```
 
+> **Observação sobre o Lombok**: Para um código mais limpo e conciso, você pode adicionar o [Project Lombok](https://projectlombok.org/) ao seu projeto e substituir todos os métodos getters, setters e o construtor sem argumentos pelas anotações `@Getter`, `@Setter` e `@NoArgsConstructor` na classe.
+
 ### 3\. Salvar um Novo Registro (Create)
 
-Para criar um novo registro, instancie seu objeto e chame `.save()`. A operação é assíncrona.
+Para criar um novo registro, instancie seu objeto e chame o método `.save()`. A operação é assíncrona.
 
 ```java
 Player newPlayer = new Player(UUID.randomUUID(), "Herobrine");
@@ -185,7 +200,7 @@ if (playerToDelete != null) {
 
   - `@Table("table_name")`: **(Obrigatória)** Define a classe como uma entidade persistível e especifica o nome da tabela no banco de dados.
   - `@Id`: **(Obrigatória)** Marca um campo como a chave primária da tabela. O nome da coluna será `id` por padrão e será `AUTO_INCREMENT`.
-  - `@Column("column_name")`: **(Obrigatória para campos persistíveis)** Mapeia um campo da classe para uma coluna no banco de dados. Se o nome não for fornecido, usa o nome do campo.
+  - `@Column("column_name")`: **(Obrigatória para campos persistíveis)** Mapeia um campo da classe para uma coluna no banco de dados.
   - `@CanBeNull`: **(Opcional)** Marca um campo como `NULL` no banco de dados. Por padrão, os campos são `NOT NULL`.
 
 -----
